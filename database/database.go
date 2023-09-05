@@ -75,7 +75,7 @@ CREATE TABLE StoreStock (
 	return db.Exec(sql)
 }
 
-func GetStoreId(db *sql.DB, store Store) (int64, error) {
+func GetStoreId(db *sql.DB, store string) (int64, error) {
 	fmt.Printf("getting store id for %v", store)
 
 	q := `SELECT id FROM Store WHERE name = ?;`
@@ -134,4 +134,23 @@ func GetAllProducts(db *sql.DB, page int, pageSize int) ([]Product, error) {
 		products = append(products, product)
 	}
 	return products, nil
+}
+
+func GetProductFromSku(db *sql.DB, sku int64) (Product, error) {
+  q := `SELECT sku, prodName, price, promoPrice FROM Product WHERE sku = ?`
+  rows, err := db.Query(q, sku)
+  if err != nil {
+    return Product{}, err 
+  }
+  defer rows.Close()
+  var product Product
+	for rows.Next() {
+		err := rows.Scan(&product.Sku, &product.ProdName, &product.Price, &product.PromoPrice)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to scan row: %s", err)
+			return Product{}, err
+		}
+	}
+	return product, nil
+
 }
