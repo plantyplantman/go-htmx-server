@@ -1,153 +1,3 @@
-// package main
-//
-// import (
-// 	"html/template"
-// 	"net/http"
-// 	"github.com/go-chi/chi/v5"
-// 	"github.com/go-chi/chi/v5/middleware"
-// 	"log"
-// 	"plantyplantman/go-htmx-server/database"
-//   "plantyplantman/go-htmx-server/parsers"
-// )
-// func upsertProducts(report parsers.StoreStockReport) {
-// 	db := database.Connect()
-// 	defer db.Close()
-// 	const zero float64 = 0
-//
-// 	for _, line := range report.Lines {
-// 		product := database.Product{
-// 			Sku:      *line.Sku,
-// 			ProdName: *line.ProdName,
-//       Price: 0,
-//       PromoPrice: 0,
-// 		}
-// 		data, err := database.UpsertProduct(db, product)
-// 		if err != nil {
-// 			log.Printf("Error upserting product: %s\nProduct: %v", err, line)
-// 			continue
-// 		}
-// 		log.Printf("Upserted product: %v", data)
-// 	}
-//
-// }
-//
-// func getProducts(page int, pageLimit int) ([]database.Product, error) {
-// 	db := database.Connect()
-// 	defer db.Close()
-//
-// 	products, err := database.GetAllProducts(db, page, pageLimit)
-// 	if err != nil {
-// 		log.Printf("Error getting all products: %s", err)
-// 		return nil, err
-// 	}
-// 	return products, nil
-// }
-//
-//
-// func main() {
-//   db := database.Connect()
-// 	r := chi.NewRouter()
-//
-//   // Middleware
-// 	r.Use(middleware.Logger)
-//
-//
-// 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-// 	   tmpl, _ := template.ParseFiles("index.html")
-//      product, err := database.GetProductFromSku(db, 9300711776258)
-//      if err != nil {
-//        product = database.Product{}
-//      }
-// 	   data := map[string]database.Product{"product": product}
-// 	   tmpl.ExecuteTemplate(w, "index.html", data)
-// 	})
-//
-// //   r.Get("/products/1", func( w http.ResponseWriter, r *http.Request) {
-// //     tmplStr := `
-// //     <table>
-// //   <tr>
-// //     <th>Sku</th>
-// //     <th>Product Name</th>
-// //     <th>Price</th>
-// //     <th>Promo Price</th>
-// //     <th>SOH Petrie</th>
-// //     <th>SOH Manuka</th>
-// //     <th>SOH Bunda</th>
-// //     <th>SOH Con</th>
-// //     <th>SOH Total</th>
-// //   </tr>
-// //   <tr>
-// //     <td id=\"sku\">{{.Sku}}</td>
-// //     <td id="\prodName\">{{.ProdName}}</td>
-// //     <td id="\price\">{{.Price}}</td>
-// //     <td id="\promoPrice\">{{.PromoPrice}}</td>
-// //     <td id="\sohPetrie\">{{.SohPetrie}}</td>
-// //     <td id="\sohManuka\">{{.SohManuka}}</td>
-// //     <td id="\sohBunda\">{{.SohBunda}}</td>
-// //     <td id="\sohCon\">{{.SohCon}}</td>
-// //     <td id="\sohTotal\">{{.SohTotal}}</td>
-// //   </tr>
-// // </table>
-// //     `
-// //     product, err := database.GetProductFromSku(db, 9300711776258)
-// //     if err != nil {
-// //       product = database.Product{}
-// //     }
-// //   })
-//
-//   r.Get("/stores/1", func(w http.ResponseWriter, r *http.Request) {
-//     tmplStr := `
-//     <div hx-target="this" hx-swap="outerHTML">
-//       <div><label>Store Name</label>: Petrie</div>
-//       <button hx-get="/stores/1/edit" class="btn btn-primary">
-//         Click To Edit
-//       </button>
-//     </div>`
-//     tmpl, _ := template.New("storeEditingForm").Parse(tmplStr)
-//
-//     tmpl.ExecuteTemplate(w, "storeEditingForm", map[string]int{})
-//   })
-//
-//   r.Get("/stores/1/edit", func(w http.ResponseWriter, r *http.Request) {
-//     tmplStr := `
-// <form hx-put="/stores/1" hx-target="this" hx-swap="outerHTML">
-//   <div>
-//     <label>Store</label>
-//     <input type="text" name="Store" value="PETRIE" />
-//   </div>
-//   <button class="btn">Submit</button>
-//   <button class="btn" hx-get="/stores/1">Cancel</button>
-// </form>
-// `
-//   tmpl, _ := template.New("storeEditForm").Parse(tmplStr)
-//   tmpl.ExecuteTemplate(w, "storeEditForm", map[string]int{})
-//   })
-//
-//
-//
-// 	//  r.Post("/products", func(w http.ResponseWriter, _ *http.Request) {
-// 	// 	tmplStr := "<div id=\"product\">{{.product}}</div>"
-// 	// 	tmpl := template.Must(template.New("product").Parse(tmplStr))
-// 	// 	counter.Increase()
-// 	// 	data := map[string]int{
-// 	// 		"CounterValue": counter.GetValue(),
-// 	// 	}
-// 	// 	tmpl.ExecuteTemplate(w, "counter", data)
-// 	// })
-// 	// r.Post("/decrease", func(w http.ResponseWriter, _ *http.Request) {
-// 	// 	tmplStr := "<div id=\"counter\">{{.CounterValue}}</div>"
-// 	// 	tmpl := template.Must(template.New("counter").Parse(tmplStr))
-// 	// 	counter.Decrease()
-// 	// 	data := map[string]int{
-// 	// 		"CounterValue": counter.GetValue(),
-// 	// 	}
-// 	// 	tmpl.ExecuteTemplate(w, "counter", data)
-// 	// })
-// 	//
-//
-// 	http.ListenAndServe(":3000", r)
-// }
-
 package main
 
 import (
@@ -189,12 +39,36 @@ func start() error {
 				products = []database.Product{}
 			}
 
-			hxhttp.SetPushURL(w.Header(), "/?time="+now.Format(timeFormat))
-
 			return ProductTable(products), nil
 		}
 		return root(now), nil
 	}))
+
+
+	mux.HandleFunc("/products/search", ghttp.Adapt(func(w http.ResponseWriter, r *http.Request) (g.Node, error) {
+		if r.Method == http.MethodPost && hxhttp.IsBoosted(r.Header) {
+			err := r.ParseForm()
+
+			if err != nil {
+				log.Panicln("PARSEFORM FAILED IN POST /products")
+				return nil, err
+			}
+
+			input := r.Form["search-input"][0]
+			hxhttp.SetPushURL(w.Header(), "/products/search?="+input)
+
+			products, err := database.Search(db, "Product", "prodName", input)
+
+			if err != nil {
+				log.Println(err)
+				return nil, err
+			}
+
+			return ProductTable(products), nil
+		}
+			return nil, nil
+	}))
+
 
 	mux.HandleFunc("/products/sku", ghttp.Adapt(func(w http.ResponseWriter, r *http.Request) (g.Node, error) {
 		if r.Method == http.MethodPost && hxhttp.IsBoosted(r.Header) {
@@ -224,8 +98,8 @@ func start() error {
 				product = database.Product{}
 			}
 
-			r := []database.Product{product}
-			return ProductTable(r), nil
+			retv := []database.Product{product}
+			return ProductTable(retv), nil
 		}
 		return nil, nil
 	}))
@@ -247,9 +121,9 @@ func root(now time.Time) g.Node {
 			Script(Src("https://unpkg.com/htmx.org")),
 		},
 		Body: []g.Node{
+			H1(g.Text(`PRODUCTS`)),
 			Div(
 				Class("max-w-7xl mx-auto p-4 prose lg:prose-lg xl:prose-xl"),
-				H1(g.Text(`PRODUCTS`)),
 				FormEl(
 					Method("post"),
 					Action("/products/sku"),
@@ -261,6 +135,26 @@ func root(now time.Time) g.Node {
 					Button(
 						Type("submit"),
 						g.Text(`Get Products`),
+						Class(
+							"rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2",
+						),
+					),
+				),
+			),
+
+			Div(
+				Class("max-w-7xl mx-auto p-4 prose lg:prose-lg xl:prose-xl"),
+				FormEl(
+					Method("post"),
+					Action("/products/search"),
+					hx.Boost("true"),
+					hx.Target("#productTable"),
+					hx.Swap("outerHTML"),
+					Label(For("search"), g.Text("search")),
+					Input(Type("text"), ID("search"), Name("search-input")),
+					Button(
+						Type("submit"),
+						g.Text(`search`),
 						Class(
 							"rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2",
 						),
@@ -285,18 +179,6 @@ func productItem(product database.Product) g.Node {
 }
 
 func ProductTableHeaders(isTable bool) g.Node {
-	// tableHeaders := Tr(ID("productTableHeaders"),
-	// 	Th(g.Text("Sku")),
-	// 	Th(g.Text("Name")),
-	// 	Th(g.Text("Price")),
-	// 	Th(g.Text("PromoPrice")),
-	// 	Th(g.Text("Petrie SOH")),
-	// 	Th(g.Text("Franklin SOH")),
-	// 	Th(g.Text("Bunda SOH")),
-	// 	Th(g.Text("Con SOH")),
-	// 	Th(g.Text("Total SOH")),
-	// )
-
 	tableHeadersSlice := []string{
 		"Sku",
 		"Price",

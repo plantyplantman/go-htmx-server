@@ -34,7 +34,7 @@ func Seed(db *sql.DB) (sql.Result, error) {
 	sql := `
 -- SQLite3 Database seed file
 
--- Enable foreign keys (SQLite has them off by default)
+-- Enable foreign keys
 PRAGMA foreign_keys = ON;
 
 -- Creating the 'Product' table
@@ -43,7 +43,7 @@ CREATE TABLE Product (
     sku INTEGER UNIQUE NOT NULL,
     prodName TEXT NOT NULL,
     price REAL NOT NULL DEFAULT 0,
-	promoPrice REAL NOT NULL DEFAULT 0
+		promoPrice REAL NOT NULL DEFAULT 0
 );
 
 -- Creating the 'Store' table
@@ -148,3 +148,27 @@ func GetProductFromSku(db *sql.DB, sku int64) (Product, error) {
 	return product, nil
 
 }
+
+
+func Search(db *sql.DB, tableName string, fieldName string, searchQuery string) ([]Product, error) {
+	q := `SELECT * FROM ? WHERE INSTR(?, ?) > 0;`
+	rows, err := db.Query(q, tableName, fieldName, searchQuery)
+	if err != nil {
+		return []Product{}, err
+	}
+
+	defer rows.Close()
+	retv := []Product{}
+
+	for rows.Next() {
+		var product Product
+		err := rows.Scan(&product.Sku, &product.ProdName, &product.Price, &product.PromoPrice)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to scan row: %s", err)
+			return []Product{}, err
+		}
+		retv = append(retv, product)
+	}
+	return retv, nil
+}
+
