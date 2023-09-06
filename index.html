@@ -13,6 +13,13 @@
   </head>
 
   <body>
+    <h1>HI THIS IS A H1</h1>
     <div id="product">{{.product}}</div>
+    <div hx-target="this" hx-swap="outerHTML">
+      <div><label>Store Name</label>: Petrie</div>
+      <button hx-get="/stores/1/edit" class="btn btn-primary">
+        Click To Edit
+      </button>
+    </div>
   </body>
 </html>

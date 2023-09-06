@@ -47,7 +47,11 @@ func getProducts(page int, pageLimit int) ([]database.Product, error) {
 func main() {
   db := database.Connect()
 	r := chi.NewRouter()
+
+  // Middleware
 	r.Use(middleware.Logger)
+
+
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 	   tmpl, _ := template.ParseFiles("index.html")
      product, err := database.GetProductFromSku(db, 9300711776258)
@@ -57,6 +61,70 @@ func main() {
 	   data := map[string]database.Product{"product": product}
 	   tmpl.ExecuteTemplate(w, "index.html", data)
 	})
+
+//   r.Get("/products/1", func( w http.ResponseWriter, r *http.Request) {
+//     tmplStr := `
+//     <table>
+//   <tr>
+//     <th>Sku</th>
+//     <th>Product Name</th>
+//     <th>Price</th>
+//     <th>Promo Price</th>
+//     <th>SOH Petrie</th>
+//     <th>SOH Manuka</th>
+//     <th>SOH Bunda</th>
+//     <th>SOH Con</th>
+//     <th>SOH Total</th>
+//   </tr>
+//   <tr>
+//     <td id=\"sku\">{{.Sku}}</td>
+//     <td id="\prodName\">{{.ProdName}}</td>
+//     <td id="\price\">{{.Price}}</td>
+//     <td id="\promoPrice\">{{.PromoPrice}}</td>
+//     <td id="\sohPetrie\">{{.SohPetrie}}</td>
+//     <td id="\sohManuka\">{{.SohManuka}}</td>
+//     <td id="\sohBunda\">{{.SohBunda}}</td>
+//     <td id="\sohCon\">{{.SohCon}}</td>
+//     <td id="\sohTotal\">{{.SohTotal}}</td>
+//   </tr>
+// </table>
+//     `
+//     product, err := database.GetProductFromSku(db, 9300711776258)
+//     if err != nil {
+//       product = database.Product{}
+//     }
+//   })
+
+  r.Get("/stores/1", func(w http.ResponseWriter, r *http.Request) {
+    tmplStr := `
+    <div hx-target="this" hx-swap="outerHTML">
+      <div><label>Store Name</label>: Petrie</div>
+      <button hx-get="/stores/1/edit" class="btn btn-primary">
+        Click To Edit
+      </button>
+    </div>`
+    tmpl, _ := template.New("storeEditingForm").Parse(tmplStr)
+  
+    tmpl.ExecuteTemplate(w, "storeEditingForm", map[string]int{}) 
+  })
+
+  r.Get("/stores/1/edit", func(w http.ResponseWriter, r *http.Request) {
+    tmplStr := `
+<form hx-put="/stores/1" hx-target="this" hx-swap="outerHTML">
+  <div>
+    <label>Store</label>
+    <input type="text" name="Store" value="PETRIE" />
+  </div>
+  <button class="btn">Submit</button>
+  <button class="btn" hx-get="/stores/1">Cancel</button>
+</form>
+`
+  tmpl, _ := template.New("storeEditForm").Parse(tmplStr)
+  tmpl.ExecuteTemplate(w, "storeEditForm", map[string]int{}) 
+  })
+
+
+
 	//  r.Post("/products", func(w http.ResponseWriter, _ *http.Request) {
 	// 	tmplStr := "<div id=\"product\">{{.product}}</div>"
 	// 	tmpl := template.Must(template.New("product").Parse(tmplStr))
@@ -76,5 +144,6 @@ func main() {
 	// 	tmpl.ExecuteTemplate(w, "counter", data)
 	// })
 	//
+
 	http.ListenAndServe(":3000", r)
 }
