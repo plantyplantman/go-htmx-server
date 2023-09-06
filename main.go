@@ -175,61 +175,60 @@ func main() {
 func start() error {
 	now := time.Now()
 	mux := http.NewServeMux()
-  db, err := database.Connect()
-  if err != nil {
-    log.Panicln("Connection to database failed")
-  }
-  log.Println("Connection to database succeeded")
+	db, err := database.Connect()
+	if err != nil {
+		log.Panicln("Connection to database failed")
+	}
+	log.Println("Connection to database succeeded")
 
 	mux.HandleFunc("/", ghttp.Adapt(func(w http.ResponseWriter, r *http.Request) (g.Node, error) {
 		if r.Method == http.MethodPost && hxhttp.IsBoosted(r.Header) {
 
-      products, err := database.GetAllProducts(db, 1, 20)
-      if err != nil {
-        products = []database.Product{}
-      }
+			products, err := database.GetAllProducts(db, 1, 20)
+			if err != nil {
+				products = []database.Product{}
+			}
 
 			hxhttp.SetPushURL(w.Header(), "/?time="+now.Format(timeFormat))
 
-			return productTable(products), nil
+			return ProductTable(products), nil
 		}
 		return root(now), nil
 	}))
 
-  mux.HandleFunc("/products/sku", ghttp.Adapt(func(w http.ResponseWriter, r *http.Request) (g.Node, error) {
-    if r.Method == http.MethodPost && hxhttp.IsBoosted(r.Header) {
-      err := r.ParseForm()
-      if err != nil {
-        log.Panicln("PARSEFORM FAILED IN POST /products")
-      }
+	mux.HandleFunc("/products/sku", ghttp.Adapt(func(w http.ResponseWriter, r *http.Request) (g.Node, error) {
+		if r.Method == http.MethodPost && hxhttp.IsBoosted(r.Header) {
+			err := r.ParseForm()
+			if err != nil {
+				log.Panicln("PARSEFORM FAILED IN POST /products")
+			}
 
-      sku := r.Form["sku-input"][0]
-      hxhttp.SetPushURL(w.Header(), "/products/sku?="+sku)
+			sku := r.Form["sku-input"][0]
+			hxhttp.SetPushURL(w.Header(), "/products/sku?="+sku)
 
-      intSku, err := strconv.ParseInt(sku, 10, 64)
-      if err != nil {
-        intSku = 0
-      }
+			intSku, err := strconv.ParseInt(sku, 10, 64)
+			if err != nil {
+				intSku = 0
+			}
 
-      if intSku == 0 {
-        data, err := database.GetAllProducts(db, 1, 20)
-        if err != nil {
-          return productTable([]database.Product{}), nil
-        }
-        return productTable(data),nil
-      }
+			if intSku == 0 {
+				data, err := database.GetAllProducts(db, 1, 20)
+				if err != nil {
+					return ProductTable([]database.Product{}), nil
+				}
+				return ProductTable(data), nil
+			}
 
-      product, err := database.GetProductFromSku(db, intSku)
+			product, err := database.GetProductFromSku(db, intSku)
+			if err != nil {
+				product = database.Product{}
+			}
 
-      if err != nil {
-        product = database.Product{}
-      }
-
-      r := []database.Product{product}
-      return productTable(r), nil
-    }
-    return nil,nil
-  }))
+			r := []database.Product{product}
+			return ProductTable(r), nil
+		}
+		return nil, nil
+	}))
 
 	log.Println("Starting on http://localhost:8080")
 	if err := http.ListenAndServe("localhost:8080", mux); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -248,16 +247,26 @@ func root(now time.Time) g.Node {
 			Script(Src("https://unpkg.com/htmx.org")),
 		},
 		Body: []g.Node{
-			Div(Class("max-w-7xl mx-auto p-4 prose lg:prose-lg xl:prose-xl"),
+			Div(
+				Class("max-w-7xl mx-auto p-4 prose lg:prose-lg xl:prose-xl"),
 				H1(g.Text(`PRODUCTS`)),
-				FormEl(Method("post"), Action("/products/sku"), hx.Boost("true"), hx.Target("#productTableHeaders"), hx.Swap("outerHTML"),
-          Label(For("Sku"), g.Text("SKU")),
-          Input(Type("text"), ID("skuInput"), Name("sku-input")),
-					Button(Type("submit"), g.Text(`Get Products`),
-						Class("rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"),
+				FormEl(
+					Method("post"),
+					Action("/products/sku"),
+					hx.Boost("true"),
+					hx.Target("#productTable"),
+					hx.Swap("outerHTML"),
+					Label(For("Sku"), g.Text("SKU")),
+					Input(Type("text"), ID("skuInput"), Name("sku-input")),
+					Button(
+						Type("submit"),
+						g.Text(`Get Products`),
+						Class(
+							"rounded-md border border-transparent bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2",
+						),
 					),
 				),
-        productTableHeaders(true),
+				ProductTable([]database.Product{}),
 			),
 		},
 	})
@@ -268,35 +277,52 @@ func partial(now time.Time) g.Node {
 }
 
 func productItem(product database.Product) g.Node {
-  return Tr(Td(g.Textf("%v",product.Sku)),
-            Td(g.Textf("%v", product.ProdName)),
-            Td(g.Textf("%v", product.Price)),
-            Td(g.Textf("%v", product.PromoPrice)),
-          )
+	return Tr(Td(g.Textf("%v", product.Sku)),
+		Td(g.Textf("%v", product.ProdName)),
+		Td(g.Textf("%v", product.Price)),
+		Td(g.Textf("%v", product.PromoPrice)),
+	)
 }
 
-func productTableHeaders(table bool) g.Node {
-  tableHeaders := Tr(ID("productTableHeaders"),
-                     Th(g.Text("Sku")),
-                     Th(g.Text("Name")),
-                     Th(g.Text("Price")),
-                     Th(g.Text("PromoPrice")),
-                     Th(g.Text("Petrie SOH")),
-                     Th(g.Text("Franklin SOH")),
-                     Th(g.Text("Bunda SOH")),
-                     Th(g.Text("Con SOH")),
-                     Th(g.Text("Total SOH")),
-                   )
-  if table {
-    return Table(tableHeaders)
-  }
-  return tableHeaders
+func ProductTableHeaders(isTable bool) g.Node {
+	// tableHeaders := Tr(ID("productTableHeaders"),
+	// 	Th(g.Text("Sku")),
+	// 	Th(g.Text("Name")),
+	// 	Th(g.Text("Price")),
+	// 	Th(g.Text("PromoPrice")),
+	// 	Th(g.Text("Petrie SOH")),
+	// 	Th(g.Text("Franklin SOH")),
+	// 	Th(g.Text("Bunda SOH")),
+	// 	Th(g.Text("Con SOH")),
+	// 	Th(g.Text("Total SOH")),
+	// )
+
+	tableHeadersSlice := []string{
+		"Sku",
+		"Price",
+		"PromoPrice",
+		"Petrie SOH",
+		"Franklin SOH",
+		"Bunda SOH",
+		"Con SOH",
+		"Total SOH",
+	}
+
+	ProductTableHeaders := g.Group(g.Map(tableHeadersSlice, func(s string) g.Node {
+		return Th(g.Text(s))
+	}))
+
+	if isTable {
+		return Table(ProductTableHeaders,ID("productTable"))
+	}
+	return ProductTableHeaders
 }
 
-func productTable(products []database.Product) g.Node {
-  tableRows := g.Group(g.Map(products, func(product database.Product) g.Node {
-    return productItem(product)
-  }))
+func ProductTable(products []database.Product) g.Node {
 
-  return Table(ID("productTable"), productTableHeaders(false), tableRows)
+	tableRows := g.Group(g.Map(products, func(product database.Product) g.Node {
+		return productItem(product)
+	}))
+
+	return Table(ID("productTable"), ProductTableHeaders(false), tableRows)
 }
