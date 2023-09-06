@@ -25,15 +25,9 @@ type Product struct {
 	PromoPrice float64
 }
 
-func Connect() *sql.DB {
+func Connect() (*sql.DB, error) {
 	var dbUrl = "libsql://equal-gargoyle-plantyplantman.turso.io?authToken=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2OTM4ODIwNDQsImlkIjoiOTAxODk2MGEtNDk5Yi0xMWVlLWE1YTQtM2UxNDk0NmVhNTY0In0.0fUZjHUY-hvj1VFwrqzsN5cD2m6zyqu6c7Q-NSiGc_B45-aZMyb4oiscg32xE2oaCrMPQr8DK83bULfE4AZMAA"
-	db, err := sql.Open("libsql", dbUrl)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to open db %s: %s", dbUrl, err)
-		os.Exit(1)
-	}
-	fmt.Printf("connected to db %s", dbUrl)
-	return db
+	return sql.Open("libsql", dbUrl)
 }
 
 func Seed(db *sql.DB) (sql.Result, error) {
