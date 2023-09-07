@@ -13,13 +13,46 @@
   </head>
 
   <body>
-    <h1>HI THIS IS A H1</h1>
-    <div id="product">{{.product}}</div>
-    <div hx-target="this" hx-swap="outerHTML">
-      <div><label>Store Name</label>: Petrie</div>
-      <button hx-get="/stores/1/edit" class="btn btn-primary">
-        Click To Edit
-      </button>
-    </div>
+    <h1>PHARMACY MULTISTORE APPLICATION</h1>
+
+    <form
+      id="ProductSearchForm"
+      hx-target="#ProductTable"
+      hx-swap="outerHTML"
+      action="/products"
+      hx-boost="true"
+    >
+      <label for="SkuField">SKU</label>
+      <input type="number" name="SkuField" id="SkuField" value="" />
+
+      <label for="ProductNameField">Product Name</label>
+      <input
+        type="text"
+        name="ProductNameField"
+        id="ProductNameField"
+        value=""
+      />
+      <button type="submit">LETS GO</button>
+    </form>
+
+    <table id="ProductTable">
+      <tr id="ProductTableHeaders">
+        {{range .ProductTableHeaders}}
+        <th>{{.Header}}</th>
+        {{end}}
+      </tr>
+
+      <div id="Products">
+        {{range .Products}}
+        <tr id="{{.Sku}}">
+          <td>{{.Sku}}</td>
+          <td>{{.ProdName}}</td>
+          <td>{{.Soh}}</td>
+          <td>{{.Price}}</td>
+          <td>{{.PromoPrice}}</td>
+        </tr>
+        {{end}}
+      </div>
+    </table>
   </body>
 </html>
