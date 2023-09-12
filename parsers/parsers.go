@@ -13,7 +13,7 @@ import (
 )
 
 type StoreStockReportLine struct {
-	Sku         *uint64
+	Sku         *string
 	ProdName    *string
 	Soh         *int
 	UnitCost    *float64
@@ -76,43 +76,26 @@ func stockReportParser(line []string) (StoreStockReportLine, error) {
 	totalCost := relevantFields[4]
 	lastOrdered := relevantFields[5]
 
-	// sku
-	skuInt, err := strconv.ParseUint(sku, 10, 64)
-	if err != nil {
-		log.Printf("Error converting sku to int: %s\nProduct: %v", err, line)
-		return StoreStockReportLine{}, err
-	}
-
-	// prodName
 	prodNameStr := strings.TrimSpace(prodName)
-
-	// soh
 	sohInt, err := strconv.Atoi(soh)
 	if err != nil {
 		log.Printf("Error converting soh to int: %s\nProduct: %v\nUsing default value 0", err, line)
 		sohInt = 0
 	}
-
-	// unitCost
 	unitCostFloat, err := parseFloat(unitCost)
 	if err != nil {
 		log.Printf("Error converting unitCost to float: %s\nProduct: %v\nUsing default value 0", err, line)
 	}
-
-	// totalCost
 	totalCostFloat, err := parseFloat(totalCost)
 	if err != nil {
 		log.Printf("Error converting totalCost to float: %s\nProduct: %v\nUsing default value 0", err, line)
 	}
-
-	// lastOrdered
 	lastOrderedTime, err := time.Parse("2/1/06", lastOrdered)
 	if err != nil {
 		log.Printf("Error converting lastOrdered to time.Time: %s\nProduct: %v\nUsing default value 0", err, line)
 	}
-
 	return StoreStockReportLine{
-		Sku:         &skuInt,
+		Sku:         &sku,
 		ProdName:    &prodNameStr,
 		Soh:         &sohInt,
 		UnitCost:    &unitCostFloat,
