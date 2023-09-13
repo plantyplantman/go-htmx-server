@@ -8,8 +8,6 @@ import (
 	_ "github.com/libsql/libsql-client-go/libsql"
 )
 
-type Store string
-
 const (
 	PETRIE   string = "PETRIE"
 	BUNDA           = "BUNDA"
@@ -17,12 +15,27 @@ const (
 	CON             = "CON"
 )
 
+type Store struct {
+	Name string
+	ID int
+}
+
 type Product struct {
+	Id int
 	Sku        uint64
 	ProdName   string
 	Soh        int
 	Price      float64
 	PromoPrice float64
+}
+
+type StoreStock struct {
+	ID int
+	StoreID int
+	ProductID int
+	Soh int
+	UnitCost float64
+	LastOrdered sql.NullTime
 }
 
 func Connect() (*sql.DB, error) {
@@ -70,7 +83,7 @@ CREATE TABLE StoreStock (
 }
 
 func GetStoreId(db *sql.DB, store string) (int64, error) {
-	fmt.Printf("getting store id for %v", store)
+	// fmt.Printf("getting store id for %v", store)
 
 	q := `SELECT id FROM Store WHERE name = ?;`
 	rows, err := db.Query(q, store)
@@ -145,24 +158,25 @@ func GetProductFromSku(db *sql.DB, sku int64) (Product, error) {
 			return Product{}, err
 		}
 	}
-	return product, nil
 
+	return product, nil
 }
 
 
-func Search(db *sql.DB, tableName string, fieldName string, searchQuery string) ([]Product, error) {
-	q := `SELECT * FROM ? WHERE INSTR(?, ?) > 0;`
-	rows, err := db.Query(q, tableName, fieldName, searchQuery)
+func SearchProductNames(db *sql.DB, searchQuery string) ([]Product, error) {
+	q := `SELECT * FROM Product WHERE prodName LIKE ?;`
+	// q := fmt.Sprintf("SELECT * FROM %v WHERE %v LIKE %%v;%", tableName, searchQuery, fieldName)
+	rows, err := db.Query(q, searchQuery)
 	if err != nil {
 		return []Product{}, err
 	}
 
 	defer rows.Close()
 	retv := []Product{}
-
 	for rows.Next() {
 		var product Product
-		err := rows.Scan(&product.Sku, &product.ProdName, &product.Price, &product.PromoPrice)
+		err := rows.Scan(&product.Id, &product.Sku, &product.ProdName,
+	&product.Price, &product.PromoPrice)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to scan row: %s", err)
 			return []Product{}, err

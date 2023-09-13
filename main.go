@@ -9,7 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"plantyplantman/go-htmx-server/database"
-	"strconv"
+	// "strconv"
 
 	// "plantyplantman/go-htmx-server/database"
 	// "strconv"
@@ -31,13 +31,12 @@ type ProductTable struct {
 }
 
 var PRODUCT_TABLE_HEADERS = []ProductTableHeader{
-				{"Sku"},
-				{"Product Name"},
-				{"Price"},
-				{"Promo Price"},
-				{"Soh"},
-			}
-
+	{"Sku"},
+	{"Product Name"},
+	{"Price"},
+	{"Promo Price"},
+	{"Soh"},
+}
 
 func main() {
 	db, err := database.Connect()
@@ -66,13 +65,16 @@ func main() {
 
 		data := ProductTable{
 			ProductTableHeaders: PRODUCT_TABLE_HEADERS,
-			Products: products,
+			Products:            products,
 		}
 		err = tpl.ExecuteTemplate(w, "index.html", data)
 		if err != nil {
 			fmt.Printf("%v\n", err)
-			executeErrorTemplate(w, TemplateErrorMessage{fmt.Sprintf("Function: tpl.ExecuteTemplate(index.html)<br>Error: %v", err)},
-				"executeProductTable")
+			executeErrorTemplate(
+				w,
+				TemplateErrorMessage{fmt.Sprintf("Function: tpl.ExecuteTemplate(index.html)<br>Error: %v", err)},
+				"executeProductTable",
+			)
 		}
 	})
 
@@ -80,37 +82,73 @@ func main() {
 		var err error
 		err = r.ParseForm()
 		if err != nil {
-			executeErrorTemplate(w, TemplateErrorMessage{fmt.Sprintf("Function: r.ParseForm()<br>Error: %v", err)},"parseForm")
+			executeErrorTemplate(w, TemplateErrorMessage{
+				fmt.Sprintf("Function: r.ParseForm()<br>Error: %v", err),
+			}, "parseForm")
 		}
 
-		if sku := r.Form["SkuField"]; len(sku) > 0 && sku[0] != "" {
-			intSku, err := strconv.ParseInt(sku[0], 10, 64)
+		// if sku := r.Form["SkuField"]; len(sku) > 0 && sku[0] != "" {
+		// 	intSku, err := strconv.ParseInt(sku[0], 10, 64)
+		// 	if err != nil {
+		// 		executeErrorTemplate(
+		// 			w,
+		// 			TemplateErrorMessage{fmt.Sprintf("Function: strconv.ParseUint(sku, 10, 64)<br>Error: %v", err)},
+		// 			"parseForm",
+		// 		)
+		// 	}
+		// 	product, err := database.GetProductFromSku(db, intSku)
+		// 	if err != nil {
+		// 		executeErrorTemplate(
+		// 			w,
+		// 			TemplateErrorMessage{fmt.Sprintf("Function: database.GetProductFromSku(db, intSku)<br>Error: %v", err)},
+		// 			"parseForm",
+		// 		)
+		// 	}
+		//
+		// 	data := ProductTable{
+		// 		ProductTableHeaders: PRODUCT_TABLE_HEADERS,
+		// 		Products:            []database.Product{product},
+		// 	}
+		//
+		// 	err = executeProductTable(w, data)
+		// 	if err != nil {
+		// 		executeErrorTemplate(
+		// 			w,
+		// 			TemplateErrorMessage{fmt.Sprintf("Function: executeProductTable called from /products<br>Error: %v", err)},
+		// 			"parseForm",
+		// 		)
+		// 	}
+		// }
+		if prodName := r.Form["ProductNameField"]; len(prodName) > 0 && prodName[0] != "" {
+			products, err := database.SearchProductNames(db, "%"+prodName[0] + "%")
 			if err != nil {
-				executeErrorTemplate(w, TemplateErrorMessage{fmt.Sprintf("Function: strconv.ParseUint(sku, 10, 64)<br>Error: %v", err)},"parseForm")
-			}
-			product, err := database.GetProductFromSku(db, intSku)
-			if err != nil {
-				executeErrorTemplate(w, TemplateErrorMessage{fmt.Sprintf("Function: database.GetProductFromSku(db, intSku)<br>Error: %v", err)},"parseForm")
+				panic(err)
+				// executeErrorTemplate(
+				// 	w,
+				// 	TemplateErrorMessage{fmt.Sprintf("Function: database.GetProductFromSku(db, intSku)<br>Error: %v", err)},
+				// 	"parseForm",
+				// )
 			}
 
 			data := ProductTable{
 				ProductTableHeaders: PRODUCT_TABLE_HEADERS,
-				Products: []database.Product{product},
+				Products:            products,
 			}
 
 			err = executeProductTable(w, data)
 			if err != nil {
-				executeErrorTemplate(w, TemplateErrorMessage{fmt.Sprintf("Function: executeProductTable called from /products<br>Error: %v", err)},"parseForm")
+				panic(err)
+				// executeErrorTemplate(
+				// 	w,
+				// 	TemplateErrorMessage{fmt.Sprintf("Function: executeProductTable called from /products<br>Error: %v", err)},
+				// 	"parseForm",
+				// )
 			}
 		}
-		// prodName := r.Form["prodName"]
 	})
-
 
 	http.ListenAndServe(":42069", r)
 }
-
-
 
 func executeProductTable(w http.ResponseWriter, data ProductTable) error {
 	tmplStr := `<table id="ProductTable">
